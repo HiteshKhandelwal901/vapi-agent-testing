@@ -28,6 +28,6 @@ def get_call_details(call_id):
         return None
 
 if __name__ == "__main__":
-    # Use the call ID from our previous test
-    call_id = "baa254da-e42f-47ca-8670-4c3e12a49259"
+    # Use the call ID from our latest test
+    call_id = "643f8296-c0e2-41c6-bbb2-08f64d9d8adf"
     get_call_details(call_id) 

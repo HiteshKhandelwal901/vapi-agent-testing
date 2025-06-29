@@ -1,140 +1,158 @@
-# Vapi Voice Agent
+# Vapi Agent Testing - Two Agent System
 
-A Python-based voice agent using Vapi that gets triggered based on events. This project demonstrates how to create a single voice agent that can make calls from a source phone number to a destination phone number using Vapi's API.
+A Python-based voice agent system using Vapi that demonstrates communication between two specialized AI agents: **Property Manager** and **Maintenance Agent**.
 
-## Features
+## 🏗️ Architecture
 
-- Create a single Vapi voice assistant with custom system prompt
-- Set up a source phone number and associate it with the assistant
-- Trigger calls from source to destination programmatically
-- Handle webhooks for call events
-- Simple conversation flow with automatic exit after a few exchanges
+### **Two Specialized Agents:**
+1. **👔 Property Manager Agent** - Initiates calls to report maintenance issues
+2. **🔧 Maintenance Agent** - Receives calls and provides maintenance solutions
 
-## Configuration
+### **Features:**
+- **LLM Integration**: Both agents connected to OpenAI GPT-3.5-turbo
+- **Voice Synthesis**: 11labs voice synthesis for natural speech
+- **30-Second Calls**: Automated call duration with professional endings
+- **Specialized Prompts**: Role-specific system prompts for each agent
+- **Phone Number Association**: Each agent has its own dedicated phone number
 
-The project uses the following configuration:
+## 📞 Phone Numbers
 
+- **Property Manager**: `+1 (828) 382-7926` (initiates calls)
+- **Maintenance Agent**: `+1 (657) 667-8043` (receives calls)
+
+## 🚀 Quick Start
+
+### 1. **Setup the Two Agents**
+```bash
+python setup_two_agents.py setup
+```
+
+### 2. **Test the Conversation**
+```bash
+python setup_two_agents.py test
+```
+
+### 3. **Simulate the Conversation**
+```bash
+python simulate_agent_conversation.py
+```
+
+## 📋 Agent Roles
+
+### **Property Manager Agent**
+- Greets maintenance agent professionally
+- Reports property issues that need attention
+- Provides specific details about problems
+- Asks for estimated completion times
+- Ends calls after 30 seconds politely
+
+### **Maintenance Agent**
+- Answers calls professionally from property managers
+- Listens to reported issues carefully
+- Asks clarifying questions about problems
+- Provides realistic time estimates for repairs
+- Confirms understanding of work needed
+- Ends calls after 30 seconds politely
+
+## 🔧 Configuration
+
+### **API Keys**
 - **Private Key**: `02907a93-2328-4f9f-8383-f80038571981`
 - **Public Key**: `832e23b9-6647-41be-adde-b50bf18224d5`
-- **Source Phone**: `+1 (828) 382-7926` (makes the calls)
-- **Destination Phone**: `+1 (657) 667-8043` (receives the calls)
 
-## Setup
+### **AI Models**
+- **LLM**: OpenAI GPT-3.5-turbo
+- **Voice**: 11labs (Voice ID: pNInz6obpgDQGcFmaJgB)
+- **Speech-to-Text**: Deepgram Nova-2
 
-1. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Setup the voice agent and phone number**:
-   ```bash
-   python setup.py setup
-   ```
-
-3. **Start the web server**:
-   ```bash
-   python app.py
-   ```
-
-## Usage
-
-### Command Line
-
-- **Setup voice agent and phone number**:
-  ```bash
-  python setup.py setup
-  ```
-
-- **Test a call from source to destination**:
-  ```bash
-  python setup.py test
-  ```
-
-### Web API
-
-The Flask server provides the following endpoints:
-
-- **Health Check**: `GET http://localhost:5000/health`
-- **Setup**: `POST http://localhost:5000/setup`
-- **Trigger Call**: `POST http://localhost:5000/trigger-call`
-- **Webhook**: `POST http://localhost:5000/webhook` (for Vapi callbacks)
-
-### Testing the Voice Agent
-
-1. **Start the server**:
-   ```bash
-   python app.py
-   ```
-
-2. **Setup the agent** (if not done already):
-   ```bash
-   curl -X POST http://localhost:5000/setup
-   ```
-
-3. **Trigger a call**:
-   ```bash
-   curl -X POST http://localhost:5000/trigger-call
-   ```
-
-4. **Check health**:
-   ```bash
-   curl http://localhost:5000/health
-   ```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-vapi_testing/
-├── requirements.txt      # Python dependencies
-├── config.py            # Configuration settings
-├── vapi_agent.py        # Vapi API client class
-├── setup.py             # Setup script for agent and phone number
-├── app.py               # Flask web application
-└── README.md            # This file
+vapi-agent-testing/
+├── config.py                      # Configuration and prompts
+├── vapi_agent.py                  # Vapi API client
+├── setup_two_agents.py            # Setup and test two agents
+├── simulate_agent_conversation.py # Conversation simulation
+├── check_calls.py                 # Check call history
+├── get_call_details.py            # Get detailed call info
+├── app.py                         # Flask web application
+└── requirements.txt               # Python dependencies
 ```
 
-## How It Works
+## 🎯 Example Conversation Flow
 
-1. **Setup Phase**: Creates a single Vapi voice assistant with a system prompt
-2. **Phone Number**: Associates the source phone number with the assistant
-3. **Call Trigger**: When triggered, initiates a call from source to destination
-4. **Conversation Flow**: 
-   - Voice agent greets the destination and asks how it can help
-   - After brief conversation, politely ends the call
-   - Conversation exits after a few exchanges
-
-## Webhook Configuration
-
-To receive call events from Vapi, configure your webhook URL in the Vapi dashboard:
 ```
-http://your-domain.com/webhook
+[0s]  👔 Property Manager: "Hello, this is the Property Manager. I need to report some maintenance issues."
+[3s]  🔧 Maintenance Agent: "Good morning! I'm the Maintenance Agent. What issues do you have for me today?"
+[6s]  👔 Property Manager: "We have a leaking faucet in unit 3B and the HVAC system in the lobby is making strange noises."
+[9s]  🔧 Maintenance Agent: "I understand. Can you tell me more about the faucet leak - is it a steady drip or more severe?"
+[12s] 👔 Property Manager: "It's a steady drip that's been going on for about two days. The tenant is concerned about water damage."
+[15s] 🔧 Maintenance Agent: "Got it. For the faucet, I can have someone there within 2 hours. The HVAC will need a full inspection."
+[18s] 👔 Property Manager: "That sounds good. How long do you think the HVAC inspection will take?"
+[21s] 🔧 Maintenance Agent: "The HVAC inspection should take about 3-4 hours. I'll schedule it for tomorrow morning."
+[24s] 👔 Property Manager: "Perfect. Thank you for your quick response. I'll inform the tenant about the timeline."
+[27s] 🔧 Maintenance Agent: "You're welcome. I'll send you a confirmation once the work is scheduled. Have a great day!"
+[30s] 📞 Call ends
 ```
 
-The webhook handles:
-- `call-start`: Initializes the conversation
-- `call-end`: Cleans up when call ends
-- `function-call`: Handles any function calls (if needed)
+## 📊 Call Analytics
 
-## Customization
+### **Recent Test Results:**
+- **Call Duration**: ~33 seconds
+- **Cost**: $0.0341
+- **Status**: Successfully completed
+- **Recording**: Available in Vapi dashboard
+- **Transcript**: AI greeting and conversation
 
-You can customize the voice agent by modifying:
+## 🔍 Monitoring
 
-- **System prompt** in `setup.py`
-- **Voice settings** in `vapi_agent.py`
-- **Conversation flow** in `app.py`
-- **Response logic** in the `get_llm_response` function
+### **Check Call Status:**
+```bash
+python check_calls.py
+```
 
-## Troubleshooting
+### **Get Detailed Call Info:**
+```bash
+python get_call_details.py
+```
 
-1. **API Key Issues**: Ensure your Vapi API keys are correct in `config.py`
-2. **Phone Number Issues**: Verify phone numbers are properly formatted with country codes
-3. **Webhook Issues**: Make sure your webhook URL is publicly accessible
-4. **Call Failures**: Check Vapi dashboard for call logs and error messages
+### **Vapi Dashboard:**
+- Visit: https://console.vapi.ai
+- View call recordings, transcripts, and analytics
 
-## Next Steps
+## 🛠️ Development
 
-- Integrate with a more sophisticated LLM
-- Add conversation state management
-- Implement call scheduling
-- Add error handling and retry mechanisms
-- Create a web interface for managing calls 
+### **Adding New Agents:**
+1. Update `config.py` with new agent prompts
+2. Add phone numbers to Vapi account
+3. Modify `setup_two_agents.py` for new agent setup
+4. Test with `python setup_two_agents.py test`
+
+### **Customizing Prompts:**
+Edit the system prompts in `config.py`:
+- `PROPERTY_MANAGER_PROMPT`
+- `MAINTENANCE_AGENT_PROMPT`
+
+## 📈 Future Enhancements
+
+- **Webhook Integration**: Real-time call event handling
+- **Database Storage**: Call history and analytics
+- **Multi-Agent Scenarios**: More complex conversation flows
+- **Custom Voice Models**: Specialized voices for each agent
+- **SMS Integration**: Text message notifications
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**Repository**: https://github.com/HiteshKhandelwal901/vapi-agent-testing 

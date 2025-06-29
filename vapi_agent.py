@@ -116,4 +116,21 @@ class VapiAgent:
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Error getting calls: {e}")
-            return None 
+            return None
+
+    def update_phone_number(self, phone_id, assistant_id, name):
+        """Update a phone number to associate it with an assistant"""
+        try:
+            url = f"{self.base_url}/phone-number/{phone_id}"
+            payload = {
+                "assistantId": assistant_id,
+                "name": name
+            }
+            response = requests.patch(url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            result = response.json()
+            print(f"Phone number updated: {result}")
+            return result
+        except requests.exceptions.RequestException as e:
+            print(f"Error updating phone number: {e}")
+            raise 

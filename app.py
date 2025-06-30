@@ -1,72 +1,71 @@
 from flask import Flask, request, jsonify
 from vapi_agent import VapiAgent
-from config import SOURCE_PHONE_NUMBER, DESTINATION_PHONE_NUMBER
+from config import PROPERTY_MANAGER_PHONE, MAINTENANCE_PHONE, AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_DEPLOYMENT_NAME
 import json
+from update_kb import add_conversation_to_kb
+from openai import OpenAI
+import chromadb
+from azure_embedding import AzureOpenAIEmbeddingFunction
 
 app = Flask(__name__)
 vapi = VapiAgent()
 
-# Basic conversation state to track message exchanges
-conversation_count = 0
-MAX_EXCHANGES = 3  # Exit after 3 exchanges
+# Setup ChromaDB client and embedding function for RAG
+chroma_client = chromadb.PersistentClient(path="./chroma_kb")
+azure_ef = AzureOpenAIEmbeddingFunction(
+    api_key=AZURE_OPENAI_API_KEY,
+    endpoint=AZURE_OPENAI_ENDPOINT,
+    deployment_name=AZURE_DEPLOYMENT_NAME
+)
+collection = chroma_client.get_collection("property_management_kb")
 
-def get_llm_response(user_message):
-    """Simple LLM response function for the voice agent"""
-    responses = [
-        "Hello! This is your voice assistant. How can I help you today?",
-        "I understand your request. Let me assist you with that.",
-        "Thank you for the conversation. Have a great day!"
-    ]
-    
-    current_index = min(conversation_count, len(responses) - 1)
-    return responses[current_index]
+# OpenAI client for LLM calls
+client = OpenAI(api_key=AZURE_OPENAI_API_KEY)
+
+def retrieve_similar(query, top_k=3):
+    query_embedding = azure_ef([query])[0]
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"]
+    )
+    docs = results["documents"][0] if results["documents"] else []
+    return docs
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """Handle Vapi webhooks"""
-    global conversation_count
-    
-    print(f"Received webhook: {json.dumps(request.json, indent=2)}")
-    
     data = request.json
-    event_type = data.get('type')
-    
-    if event_type == 'call-start':
-        conversation_count = 0
-        call_data = data.get('call', {})
-        from_number = call_data.get('from')
-        to_number = call_data.get('to')
-        
-        print(f"Call started from {from_number} to {to_number}")
-        
-        response = get_llm_response('')
-        
-        return jsonify({
-            'assistant': {
-                'name': 'Voice Agent',
-                'model': {
-                    'provider': 'openai',
-                    'model': 'gpt-3.5-turbo',
-                    'systemPrompt': 'You are a helpful voice assistant. When you make a call, greet the person warmly and ask how you can help them. Keep responses brief and natural. After a brief conversation, politely end the call.'
-                },
-                'voice': {
-                    'provider': '11labs',
-                    'voiceId': 'pNInz6obpgDQGcFmaJgB'
-                },
-                'firstMessage': response
-            }
-        })
-    
-    elif event_type == 'call-end':
-        print("Call ended")
-        return jsonify({})
-    
-    elif event_type == 'function-call':
-        # Handle function calls if needed
-        return jsonify({})
-    
-    else:
-        return jsonify({})
+    # Extract the user message (adjust key as per Vapi's payload)
+    user_message = data.get('user_message', '')
+    if not user_message:
+        # Fallback: try to extract from other fields or return default
+        user_message = data.get('text', '')
+    if not user_message:
+        return jsonify({"response": "I'm sorry, I didn't catch that. Could you please repeat?"})
+
+    # 1. Retrieve relevant context from ChromaDB
+    context_docs = retrieve_similar(user_message, top_k=3)
+    context = "\n".join(context_docs)
+
+    # 2. Compose the prompt for the LLM
+    prompt = (
+        f"You are a helpful property manager. Use the following context to answer the user's question.\n"
+        f"Context:\n{context}\n\n"
+        f"User: {user_message}\n"
+        f"Assistant:"
+    )
+
+    # 3. Call the LLM (OpenAI v1.x syntax)
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": prompt}]
+    )
+    agent_reply = response.choices[0].message.content
+
+    # 4. Return the reply to Vapi
+    return jsonify({
+        "response": agent_reply
+    })
 
 @app.route('/trigger-call', methods=['POST'])
 def trigger_call():
@@ -86,7 +85,7 @@ def trigger_call():
         print("Initiating call from source to destination...")
         call = vapi.make_call(
             source_phone['id'],
-            DESTINATION_PHONE_NUMBER,
+            MAINTENANCE_PHONE,
             assistant['id']
         )
         
@@ -119,6 +118,26 @@ def setup_endpoint():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/webhook/call_completed', methods=['POST'])
+def call_completed_webhook():
+    data = request.json
+    transcript = data.get('transcript', '')
+    if not transcript:
+        return jsonify({"status": "no transcript"}), 400
+
+    # Parse transcript into conversation turns
+    conversation_turns = []
+    for line in transcript.split('\n'):
+        if ': ' in line:
+            role, message = line.split(': ', 1)
+            conversation_turns.append({"role": role.strip(), "message": message.strip()})
+
+    if conversation_turns:
+        add_conversation_to_kb(conversation_turns)
+        return jsonify({"status": "added to KB"}), 200
+    else:
+        return jsonify({"status": "no valid turns"}), 400
 
 if __name__ == '__main__':
     print("Vapi voice agent server starting...")

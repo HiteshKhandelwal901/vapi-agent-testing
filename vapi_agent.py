@@ -11,8 +11,8 @@ class VapiAgent:
             'Content-Type': 'application/json'
         }
     
-    def create_assistant(self, name, system_prompt):
-        """Create a Vapi assistant"""
+    def create_assistant(self, name, system_prompt, server_url=None):
+        """Create a Vapi assistant, optionally setting the serverUrl (webhook)"""
         try:
             url = f"{self.base_url}/assistant"
             payload = {
@@ -28,18 +28,31 @@ class VapiAgent:
                 },
                 "firstMessage": "Hello! This is your voice assistant. How can I help you today?"
             }
-            
+            if server_url:
+                payload["serverUrl"] = server_url
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
-            
             result = response.json()
             print(f"Assistant created: {result}")
             return result
-            
         except requests.exceptions.RequestException as e:
             print(f"Error creating assistant: {e}")
             raise
-    
+
+    def update_assistant_server_url(self, assistant_id, server_url):
+        """Update the serverUrl (webhook) for an existing assistant"""
+        try:
+            url = f"{self.base_url}/assistant/{assistant_id}"
+            payload = {"serverUrl": server_url}
+            response = requests.patch(url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            result = response.json()
+            print(f"Assistant serverUrl updated: {result}")
+            return result
+        except requests.exceptions.RequestException as e:
+            print(f"Error updating assistant serverUrl: {e}")
+            raise
+
     def create_phone_number(self, phone_number, assistant_id):
         """Create a phone number and associate it with an assistant"""
         try:

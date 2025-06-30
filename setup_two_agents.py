@@ -8,7 +8,8 @@ from config import (
     PROPERTY_MANAGER_PHONE, 
     MAINTENANCE_PHONE,
     PROPERTY_MANAGER_PROMPT,
-    MAINTENANCE_AGENT_PROMPT
+    MAINTENANCE_AGENT_PROMPT,
+    SERVER_URL
 )
 
 def setup_two_agents():
@@ -18,18 +19,20 @@ def setup_two_agents():
     try:
         print("🏗️ Setting up Property Manager and Maintenance agents...")
         
-        # Create Property Manager assistant
+        # Create Property Manager assistant with webhook
         print("\n👔 Creating Property Manager agent...")
         property_manager = vapi.create_assistant(
             "Property Manager Agent",
-            PROPERTY_MANAGER_PROMPT
+            PROPERTY_MANAGER_PROMPT,
+            server_url=SERVER_URL
         )
         
-        # Create Maintenance assistant
+        # Create Maintenance assistant with webhook
         print("\n🔧 Creating Maintenance agent...")
         maintenance_agent = vapi.create_assistant(
             "Maintenance Agent",
-            MAINTENANCE_AGENT_PROMPT
+            MAINTENANCE_AGENT_PROMPT,
+            server_url=SERVER_URL
         )
         
         # Get existing phone numbers

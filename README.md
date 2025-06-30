@@ -57,8 +57,8 @@ python simulate_agent_conversation.py
 ## 🔧 Configuration
 
 ### **API Keys**
-- **Private Key**: `02907a93-2328-4f9f-8383-f80038571981`
-- **Public Key**: `832e23b9-6647-41be-adde-b50bf18224d5`
+- **All API keys and secrets must be set in a `.env` file or as environment variables.**
+- **Do not put secrets in code or in the README.**
 
 ### **AI Models**
 - **LLM**: OpenAI GPT-3.5-turbo

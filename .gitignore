@@ -1,1 +1,33 @@
-.env 
+# Environment variables and secrets
+.env
+*.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database files
+chroma_kb/
+*.sqlite3
+*.db
+
+# Debug and log files
+webhook_debug.log
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
+*_test.py 

@@ -26,10 +26,15 @@ class VapiAgent:
                     "provider": "11labs",
                     "voiceId": "pNInz6obpgDQGcFmaJgB"
                 },
-                "firstMessage": "Hello! This is your voice assistant. How can I help you today?"
+                "firstMessage": "Hello! I'm Honey, calling from ABC property management firm regarding a maintinace fix request. Is this good time to talk?"
             }
             if server_url:
                 payload["serverUrl"] = server_url
+            # Debug print statements
+            print("[DEBUG] Vapi create_assistant request:")
+            print("URL:", url)
+            print("Headers:", self.headers)
+            print("Payload:", json.dumps(payload, indent=2))
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             result = response.json()
@@ -37,6 +42,9 @@ class VapiAgent:
             return result
         except requests.exceptions.RequestException as e:
             print(f"Error creating assistant: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print("[DEBUG] Response status:", e.response.status_code)
+                print("[DEBUG] Response body:", e.response.text)
             raise
 
     def update_assistant_server_url(self, assistant_id, server_url):
@@ -85,6 +93,10 @@ class VapiAgent:
                     "number": to_phone_number
                 }
             }
+            print("[DEBUG] Vapi make_call request:")
+            print("URL:", url)
+            print("Headers:", self.headers)
+            print("Payload:", json.dumps(payload, indent=2))
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             result = response.json()
@@ -92,6 +104,9 @@ class VapiAgent:
             return result
         except requests.exceptions.RequestException as e:
             print(f"Error making call: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print("[DEBUG] Response status:", e.response.status_code)
+                print("[DEBUG] Response body:", e.response.text)
             raise
     
     def get_assistants(self):

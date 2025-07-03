@@ -1,20 +1,17 @@
 import chromadb
 from chromadb.config import Settings
-from chromadb.utils import embedding_functions
-import openai
-from config import OPENAI_API_KEY
+from config import AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_DEPLOYMENT_NAME
+from azure_embedding import AzureOpenAIEmbeddingFunction
 
-openai.api_key = OPENAI_API_KEY
-
-openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-    api_key=openai.api_key,
-    model_name="text-embedding-3-small"
+azure_ef = AzureOpenAIEmbeddingFunction(
+    api_key=AZURE_OPENAI_API_KEY,
+    endpoint=AZURE_OPENAI_ENDPOINT,
+    deployment_name=AZURE_DEPLOYMENT_NAME
 )
 
-chroma_client = chromadb.Client(Settings(persist_directory="./chroma_kb"))
+chroma_client = chromadb.PersistentClient(path="./chroma_kb")
 collection = chroma_client.get_or_create_collection(
-    name="property_management_kb",
-    embedding_function=openai_ef
+    name="property_management_kb"
 )
 
 def add_conversation_to_kb(conversation_turns):
@@ -26,10 +23,13 @@ def add_conversation_to_kb(conversation_turns):
         ids.append(f"new_{i}_{abs(hash(turn['message']))}")
         texts.append(f"{turn['role']}: {turn['message']}")
         metadatas.append({"role": turn["role"]})
+    # Compute embeddings using Azure
+    embeddings = azure_ef(texts)
     collection.add(
         ids=ids,
         documents=texts,
-        metadatas=metadatas
+        metadatas=metadatas,
+        embeddings=embeddings
     )
     print(f"Added {len(ids)} new turns to the knowledge base.")
 

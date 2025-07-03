@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
 import chromadb
 from kb_conversations import conversations
 from azure_embedding import AzureOpenAIEmbeddingFunction
